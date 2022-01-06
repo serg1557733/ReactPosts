@@ -1,50 +1,78 @@
-import React, { useState } from "react";
+import React, {useEffect, useState } from "react";
 import './App.scss';
 
 
 function App() {
 
 const [posts, setPosts] = useState([]);
-const [body, setInput] = useState('');
-const [title, setTitle] = useState('');
+const [newPost, setnewPost] = useState({title: '', body: ''});
 
-const  fetchPosts = async () => {
-    const response = await fetch('https://jsonplaceholder.typicode.com/posts?_limit=10&_page=3');
-    const result = await response.json()
+useEffect(() => fetchPosts(),[])
+
+
+
+//decomposition later
+const [isLoading, setIsLoading] = useState(false)
+
+const URL_API = 'https://jsonplaceholder.typicode.com/posts?_limit=10&_page=3';
+
+const  fetchPosts = async (url) => {
+    setIsLoading(true)
+    try{
+        const response = await fetch(URL_API);
+        const result = await response.json()
         setPosts(result);
+    } catch (e){
+        console.log(e)
+    }
+    setIsLoading(false)
+  
 }
+
+//
+
+
+
+
 const deletePost = (id) => {
     setPosts([...posts].filter(el => el.id !== id));
 }
-const addPost = (e) => {
-    const newPost = {
-        title, body, id: Date.now()
-    }
-    setPosts([...posts, newPost]);
+
+const addPost = () => {
+    if(newPost.title && newPost.body){
+        setPosts([...posts, {...newPost, id: Date.now()}]);
+        setnewPost({title: '', body: ''})
+    } else return // later add message for user
+    
+
 }
 
 return (
       <div className="App-header">
-          <button onClick={fetchPosts}>Get posts</button>
-          <button onClick={() => addPost(posts)}>add post</button>
+          <button onClick={addPost}>add post</button>
+
+          
           <input type="text" 
                 name="name" id="1" 
-                value={body}
-                onChange={e => {setInput(e.target.value)}}/>
+                value={newPost.body}
+                onChange={e => {setnewPost({...newPost, body: e.target.value})}}/>
             <input type="text" 
                 name="title" id="1" 
-                value={title}
-                onChange={e => {setTitle(e.target.value)}}/>
-          {posts.map((item, index) =>        
+                value={newPost.title}
+                onChange={e => {setnewPost({...newPost,title: e.target.value})}}/>
+
+          {isLoading? 
+          <h2 style={{textAlign:'center', color:'blue'}}>loading...</h2>
+          :   
+          posts.map((item, index) =>        
                    <div className="div" key={index}>
-                       <div>post#{index}</div><div>{item.title}</div>
+                       <div>post#{index + 1}</div><div>{item.title}</div>
                        <div>{item.body}</div>
                        <span>user ID{item.userId}</span>
                        <span>Id {item.id}</span>
                        <button onClick={() => deletePost(item.id)}>DELETE POST</button>
                     </div>
-
-          )}
+          )} 
       </div>
     );
 }
